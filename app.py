@@ -2,7 +2,7 @@ import gradio as gr
 import torch
 import torchaudio
 import numpy as np
-from transformers import AutoProcessor, SeamlessM4Tv2Model
+from transformers import AutoProcessor, SeamlessM4TModel
 from languages import (
     text_source_languages,
     speech_target_languages,
@@ -21,7 +21,7 @@ def load_model():
     if model is None:
         print(f"Loading model on {device}...")
         try:
-            model = SeamlessM4Tv2Model.from_pretrained("facebook/seamless-m4t-medium")
+            model = SeamlessM4TModel.from_pretrained("facebook/seamless-m4t-medium")
             model.to(device)
             processor = AutoProcessor.from_pretrained("facebook/seamless-m4t-medium")
             print("Model loaded successfully.")
