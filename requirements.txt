@@ -1,0 +1,8 @@
+gradio
+torch
+torchaudio
+transformers
+scipy
+numpy
+sentencepiece
+protobuf
