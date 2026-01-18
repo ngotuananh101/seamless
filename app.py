@@ -74,7 +74,7 @@ def seamless_translate(text, src_lang_name, tgt_lang_name):
         text_inputs = processor(text=text, src_lang=src_lang, return_tensors="pt").to(device)
         
         # Generate Audio and Text
-        output = model.generate(**text_inputs, tgt_lang=tgt_lang)
+        output = model.generate(**text_inputs, tgt_lang=tgt_lang, return_dict_in_generate=True)
         
         # Decode text
         translated_text = processor.decode(output.sequences[0], skip_special_tokens=True)
@@ -105,7 +105,7 @@ def seamless_audio_translate(audio, tgt_lang_name):
         
         print(f"Translating audio to {tgt_lang}")
         
-        output = model.generate(**audio_inputs, tgt_lang=tgt_lang)
+        output = model.generate(**audio_inputs, tgt_lang=tgt_lang, return_dict_in_generate=True)
         
         # Decode text
         translated_text = processor.decode(output.sequences[0], skip_special_tokens=True)
