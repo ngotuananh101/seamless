@@ -155,4 +155,9 @@ with gr.Blocks(title="Seamless M4T Demo") as demo:
             audio_btn.click(seamless_audio_translate, inputs=[input_audio, tgt_lang_audio_dropdown], outputs=[output_audio_audio, output_text_audio, status_audio])
 
 if __name__ == "__main__":
-    demo.launch()
+    import argparse
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--share", action="store_true", help="Enable Gradio share link")
+    args = parser.parse_args()
+    
+    demo.launch(share=args.share)
