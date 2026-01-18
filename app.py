@@ -2,7 +2,7 @@ import gradio as gr
 import torch
 import torchaudio
 import numpy as np
-from transformers import AutoProcessor, SeamlessM4TModel
+from transformers import AutoProcessor, SeamlessM4TModel, SeamlessM4TConfig
 from languages import (
     text_source_languages,
     speech_target_languages,
@@ -21,7 +21,81 @@ def load_model():
     if model is None:
         print(f"Loading model on {device}...")
         try:
-            model = SeamlessM4TModel.from_pretrained("facebook/seamless-m4t-medium")
+            config = SeamlessM4TConfig(
+                vocab_size=256102,
+                t2u_vocab_size=10082,
+                hidden_size=1024,
+                initializer_range=0.02,
+                layer_norm_eps=1e-05,
+                use_cache=True,
+                max_position_embeddings=1024,
+                is_encoder_decoder=True,
+                encoder_layerdrop=0.05,
+                decoder_layerdrop=0.05,
+                activation_function='relu',
+                dropout=0.1,
+                attention_dropout=0.1,
+                activation_dropout=0.0,
+                scale_embedding=True,
+                encoder_layers=24,
+                encoder_ffn_dim=8192,
+                encoder_attention_heads=16,
+                decoder_layers=24,
+                decoder_ffn_dim=8192,
+                decoder_attention_heads=16,
+                decoder_start_token_id=3,
+                max_new_tokens=256,
+                pad_token_id=0,
+                bos_token_id=2,
+                eos_token_id=3,
+                speech_encoder_layers=24,
+                speech_encoder_attention_heads=16,
+                speech_encoder_intermediate_size=4096,
+                speech_encoder_hidden_act='swish',
+                speech_encoder_dropout=0.0,
+                add_adapter=True,
+                speech_encoder_layerdrop=0.1,
+                feature_projection_input_dim=160,
+                num_conv_pos_embeddings=128,
+                num_conv_pos_embedding_groups=16,
+                adaptor_kernel_size=8,
+                adaptor_stride=8,
+                adaptor_dropout=0.1,
+                num_adapter_layers=1,
+                position_embeddings_type='relative',
+                rotary_embedding_base=10000,
+                max_source_positions=4096,
+                conv_depthwise_kernel_size=31,
+                t2u_bos_token_id=0,
+                t2u_pad_token_id=1,
+                t2u_eos_token_id=2,
+                t2u_decoder_start_token_id=2,
+                t2u_max_new_tokens=1024,
+                t2u_encoder_layers=6,
+                t2u_encoder_ffn_dim=8192,
+                t2u_encoder_attention_heads=16,
+                t2u_decoder_layers=6,
+                t2u_decoder_ffn_dim=8192,
+                t2u_decoder_attention_heads=16,
+                t2u_max_position_embeddings=2048,
+                sampling_rate=16000,
+                upsample_initial_channel=512,
+                upsample_rates=[5, 4, 4, 2, 2],
+                upsample_kernel_sizes=[11, 8, 8, 4, 4],
+                resblock_kernel_sizes=[3, 7, 11],
+                resblock_dilation_sizes=[[1, 3, 5], [1, 3, 5], [1, 3, 5]],
+                leaky_relu_slope=0.1,
+                unit_hifi_gan_vocab_size=10000,
+                unit_embed_dim=1280,
+                lang_embed_dim=256,
+                spkr_embed_dim=256,
+                vocoder_num_langs=36,
+                vocoder_num_spkrs=200,
+                variance_predictor_kernel_size=3,
+                var_pred_dropout=0.5,
+                vocoder_offset=4
+            )
+            model = SeamlessM4TModel.from_pretrained("facebook/seamless-m4t-medium", config=config)
             model.to(device)
             processor = AutoProcessor.from_pretrained("facebook/seamless-m4t-medium")
             print("Model loaded successfully.")
