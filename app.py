@@ -73,19 +73,29 @@ def seamless_translate(text, src_lang_name, tgt_lang_name):
 
         text_inputs = processor(text=text, src_lang=src_lang, return_tensors="pt").to(device)
         
-        # Generate Audio and Text
-        # First generate text
-        text_output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=False)
-        # text_output is GenerateEncoderDecoderOutput, access .sequences for token IDs
-        token_ids = text_output.sequences[0].cpu().numpy().tolist()
-        translated_text = processor.tokenizer.decode(token_ids, skip_special_tokens=True)
-        
-        # Then generate speech
-        audio_output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=True)
+        # Use no_grad to reduce memory usage
+        with torch.no_grad():
+            # First generate text
+            text_output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=False)
+            # text_output is GenerateEncoderDecoderOutput, access .sequences for token IDs
+            token_ids = text_output.sequences[0].cpu().numpy().tolist()
+            translated_text = processor.tokenizer.decode(token_ids, skip_special_tokens=True)
+            
+            # Clear memory before generating speech
+            del text_output
+            if torch.cuda.is_available():
+                torch.cuda.empty_cache()
+            
+            # Then generate speech
+            audio_output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=True)
         
         # audio_output is (waveform, waveform_lengths) when generate_speech=True
         if audio_output is not None and len(audio_output) > 0 and audio_output[0] is not None:
              waveform = audio_output[0].cpu().detach()
+             del audio_output  # Free GPU memory
+             if torch.cuda.is_available():
+                 torch.cuda.empty_cache()
+             
              # Handle dimensions - waveform shape is typically [batch, channels, samples] or [batch, samples]
              if waveform.dim() == 3:
                  audio_array = waveform[0, 0, :].numpy()  # First batch, first channel
@@ -108,6 +118,8 @@ def seamless_translate(text, src_lang_name, tgt_lang_name):
             return None, translated_text, "No audio generated."
             
     except Exception as e:
+        if torch.cuda.is_available():
+            torch.cuda.empty_cache()
         return None, None, str(e)
 
 def seamless_audio_translate(audio, tgt_lang_name):
