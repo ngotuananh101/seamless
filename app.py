@@ -80,11 +80,13 @@ def seamless_translate(text, src_lang_name, tgt_lang_name):
         translated_text = processor.decode(output.sequences[0], skip_special_tokens=True)
         
         # Extract audio
-        if output.waveform is not None:
+        # Extract audio
+        if hasattr(output, "waveform") and output.waveform is not None:
              audio_array = output.waveform.cpu().detach().squeeze().numpy()
              sample_rate = model.config.sampling_rate
              return (sample_rate, audio_array), translated_text, "Translation complete."
         else:
+            print(f"DEBUG: No waveform generated. Output type: {type(output)}")
             return None, translated_text, "No audio generated."
             
     except Exception as e:
@@ -110,11 +112,12 @@ def seamless_audio_translate(audio, tgt_lang_name):
         # Decode text
         translated_text = processor.decode(output.sequences[0], skip_special_tokens=True)
         
-        if output.waveform is not None:
+        if hasattr(output, "waveform") and output.waveform is not None:
              audio_array = output.waveform.cpu().detach().squeeze().numpy()
              sample_rate = model.config.sampling_rate
              return (sample_rate, audio_array), translated_text, "Translation complete."
         else:
+            print(f"DEBUG: No waveform generated. Output type: {type(output)}")
             return None, translated_text, "No audio generated."
 
     except Exception as e:
