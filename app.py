@@ -76,7 +76,8 @@ def seamless_translate(text, src_lang_name, tgt_lang_name):
         # Generate Audio and Text
         # First generate text
         text_output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=False)
-        translated_text = processor.decode(text_output[0].tolist(), skip_special_tokens=True)
+        # text_output is a tensor of shape [batch, seq_len], decode the first sequence
+        translated_text = processor.batch_decode(text_output, skip_special_tokens=True)[0]
         
         # Then generate speech
         audio_output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=True)
@@ -110,7 +111,8 @@ def seamless_audio_translate(audio, tgt_lang_name):
         
         # First generate text
         text_output = model.generate(**audio_inputs, tgt_lang=tgt_lang, generate_speech=False)
-        translated_text = processor.decode(text_output[0].tolist(), skip_special_tokens=True)
+        # text_output is a tensor of shape [batch, seq_len], decode the first sequence
+        translated_text = processor.batch_decode(text_output, skip_special_tokens=True)[0]
         
         # Then generate speech
         audio_output = model.generate(**audio_inputs, tgt_lang=tgt_lang, generate_speech=True)
