@@ -85,8 +85,23 @@ def seamless_translate(text, src_lang_name, tgt_lang_name):
         
         # audio_output is (waveform, waveform_lengths) when generate_speech=True
         if audio_output is not None and len(audio_output) > 0 and audio_output[0] is not None:
-             audio_array = audio_output[0].cpu().detach().squeeze().numpy()
-             sample_rate = model.config.sampling_rate
+             waveform = audio_output[0].cpu().detach()
+             # Handle dimensions - waveform shape is typically [batch, channels, samples] or [batch, samples]
+             if waveform.dim() == 3:
+                 audio_array = waveform[0, 0, :].numpy()  # First batch, first channel
+             elif waveform.dim() == 2:
+                 audio_array = waveform[0, :].numpy()  # First batch
+             else:
+                 audio_array = waveform.squeeze().numpy()
+             
+             # Normalize to [-1, 1] range if needed
+             max_val = np.abs(audio_array).max()
+             if max_val > 1.0:
+                 audio_array = audio_array / max_val
+             
+             # SeamlessM4T uses 16000 Hz sample rate
+             sample_rate = getattr(model.config, 'sampling_rate', 16000)
+             print(f"DEBUG: Audio shape: {audio_array.shape}, sample_rate: {sample_rate}, max: {audio_array.max()}, min: {audio_array.min()}")
              return (sample_rate, audio_array), translated_text, "Translation complete."
         else:
             print(f"DEBUG: No waveform generated. Output: {audio_output}")
@@ -121,8 +136,23 @@ def seamless_audio_translate(audio, tgt_lang_name):
         
         # audio_output is (waveform, waveform_lengths) when generate_speech=True
         if audio_output is not None and len(audio_output) > 0 and audio_output[0] is not None:
-             audio_array = audio_output[0].cpu().detach().squeeze().numpy()
-             sample_rate = model.config.sampling_rate
+             waveform = audio_output[0].cpu().detach()
+             # Handle dimensions - waveform shape is typically [batch, channels, samples] or [batch, samples]
+             if waveform.dim() == 3:
+                 audio_array = waveform[0, 0, :].numpy()  # First batch, first channel
+             elif waveform.dim() == 2:
+                 audio_array = waveform[0, :].numpy()  # First batch
+             else:
+                 audio_array = waveform.squeeze().numpy()
+             
+             # Normalize to [-1, 1] range if needed
+             max_val = np.abs(audio_array).max()
+             if max_val > 1.0:
+                 audio_array = audio_array / max_val
+             
+             # SeamlessM4T uses 16000 Hz sample rate
+             sample_rate = getattr(model.config, 'sampling_rate', 16000)
+             print(f"DEBUG: Audio shape: {audio_array.shape}, sample_rate: {sample_rate}, max: {audio_array.max()}, min: {audio_array.min()}")
              return (sample_rate, audio_array), translated_text, "Translation complete."
         else:
             print(f"DEBUG: No waveform generated. Output: {audio_output}")
