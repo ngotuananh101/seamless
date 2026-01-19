@@ -76,9 +76,8 @@ def seamless_translate(text, src_lang_name, tgt_lang_name):
         # Generate Audio and Text
         # First generate text
         text_output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=False)
-        print(f"DEBUG text_output type: {type(text_output)}, shape: {text_output.shape if hasattr(text_output, 'shape') else 'N/A'}")
-        # Convert tensor to list of ints for decoding
-        token_ids = text_output[0].cpu().numpy().tolist()
+        # text_output is GenerateEncoderDecoderOutput, access .sequences for token IDs
+        token_ids = text_output.sequences[0].cpu().numpy().tolist()
         translated_text = processor.tokenizer.decode(token_ids, skip_special_tokens=True)
         
         # Then generate speech
@@ -113,9 +112,8 @@ def seamless_audio_translate(audio, tgt_lang_name):
         
         # First generate text
         text_output = model.generate(**audio_inputs, tgt_lang=tgt_lang, generate_speech=False)
-        print(f"DEBUG text_output type: {type(text_output)}, shape: {text_output.shape if hasattr(text_output, 'shape') else 'N/A'}")
-        # Convert tensor to list of ints for decoding
-        token_ids = text_output[0].cpu().numpy().tolist()
+        # text_output is GenerateEncoderDecoderOutput, access .sequences for token IDs
+        token_ids = text_output.sequences[0].cpu().numpy().tolist()
         translated_text = processor.tokenizer.decode(token_ids, skip_special_tokens=True)
         
         # Then generate speech
