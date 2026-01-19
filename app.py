@@ -74,19 +74,20 @@ def seamless_translate(text, src_lang_name, tgt_lang_name):
         text_inputs = processor(text=text, src_lang=src_lang, return_tensors="pt").to(device)
         
         # Generate Audio and Text
-        output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=True)
+        # First generate text
+        text_output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=False)
+        translated_text = processor.decode(text_output[0].tolist(), skip_special_tokens=True)
         
-        # Decode text - sequences is a tuple, get first element
-        translated_text = processor.decode(output[0].squeeze().cpu(), skip_special_tokens=True)
+        # Then generate speech
+        audio_output = model.generate(**text_inputs, tgt_lang=tgt_lang, generate_speech=True)
         
-        # Extract audio
-        # output is a tuple: (text_ids, audio_waveform) when generate_speech=True
-        if len(output) > 1 and output[1] is not None:
-             audio_array = output[1].cpu().detach().squeeze().numpy()
+        # audio_output is (waveform, waveform_lengths) when generate_speech=True
+        if audio_output is not None and len(audio_output) > 0 and audio_output[0] is not None:
+             audio_array = audio_output[0].cpu().detach().squeeze().numpy()
              sample_rate = model.config.sampling_rate
              return (sample_rate, audio_array), translated_text, "Translation complete."
         else:
-            print(f"DEBUG: No waveform generated. Output: {output}")
+            print(f"DEBUG: No waveform generated. Output: {audio_output}")
             return None, translated_text, "No audio generated."
             
     except Exception as e:
@@ -107,18 +108,20 @@ def seamless_audio_translate(audio, tgt_lang_name):
         
         print(f"Translating audio to {tgt_lang}")
         
-        output = model.generate(**audio_inputs, tgt_lang=tgt_lang, generate_speech=True)
+        # First generate text
+        text_output = model.generate(**audio_inputs, tgt_lang=tgt_lang, generate_speech=False)
+        translated_text = processor.decode(text_output[0].tolist(), skip_special_tokens=True)
         
-        # Decode text - sequences is a tuple, get first element
-        translated_text = processor.decode(output[0].squeeze().cpu(), skip_special_tokens=True)
+        # Then generate speech
+        audio_output = model.generate(**audio_inputs, tgt_lang=tgt_lang, generate_speech=True)
         
-        # output is a tuple: (text_ids, audio_waveform) when generate_speech=True
-        if len(output) > 1 and output[1] is not None:
-             audio_array = output[1].cpu().detach().squeeze().numpy()
+        # audio_output is (waveform, waveform_lengths) when generate_speech=True
+        if audio_output is not None and len(audio_output) > 0 and audio_output[0] is not None:
+             audio_array = audio_output[0].cpu().detach().squeeze().numpy()
              sample_rate = model.config.sampling_rate
              return (sample_rate, audio_array), translated_text, "Translation complete."
         else:
-            print(f"DEBUG: No waveform generated. Output: {output}")
+            print(f"DEBUG: No waveform generated. Output: {audio_output}")
             return None, translated_text, "No audio generated."
 
     except Exception as e:
